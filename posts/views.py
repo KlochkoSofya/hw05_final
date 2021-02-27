@@ -41,18 +41,18 @@ def profile(request, username):
     paginator = Paginator(author_posts, 10)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
-    if (request.user.is_authenticated and request.user != author and 
+    if (request.user.is_authenticated and request.user != author and
         Follow.objects.filter(user=request.user, author=author).exists()):
-        following=True
+        following = True
     else:
-        following=False
+        following = False
     context = {
         'page': page,
         'author': author,
         'author_posts': author_posts,
         'paginator': paginator,
         'following': following
-        }
+    }
     return render(request, 'posts/profile.html', context)
 
 
@@ -77,7 +77,7 @@ def post_edit(request, username, post_id):
 
 
 def page_not_found(request, exception):
-    # Переменная exception содержит отладочную информацию, 
+    # Переменная exception содержит отладочную информацию,
     # выводить её в шаблон пользователской страницы 404 мы не станем
     return render(
         request,
@@ -122,4 +122,4 @@ def profile_follow(request, username):
 def profile_unfollow(request, username):
     author = get_object_or_404(User, username=username)
     Follow.objects.get(user=request.user, author=author).delete()
-    return redirect('profile', username=author.username)  
+    return redirect('profile', username=author.username)
