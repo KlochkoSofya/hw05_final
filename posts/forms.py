@@ -1,6 +1,5 @@
 from django import forms
 from .models import Post, Comment
-from django.forms import Textarea
 
 
 class PostForm(forms.ModelForm):

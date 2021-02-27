@@ -3,7 +3,6 @@ from .forms import PostForm, CommentForm
 from .models import Post, Group, User, Comment, Follow
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.views.decorators.cache import cache_page
 
 
 def index(request):
@@ -42,12 +41,18 @@ def profile(request, username):
     paginator = Paginator(author_posts, 10)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
-    if request.user.is_authenticated and request.user != author and (
+    if request.user.is_authenticated and request.user != author and \
         Follow.objects.filter(user=request.user, author=author).exists()):
-        following =True
+        following = True
     else:
         following = False
-    context = {'page': page, 'author': author, 'author_posts': author_posts, 'paginator': paginator, 'following':following}
+    context = {
+        'page': page, 
+        'author': author, 
+        'author_posts': author_posts, 
+        'paginator': paginator, 
+        'following': following
+    }
     return render(request, 'posts/profile.html', context)
 
 
@@ -55,7 +60,7 @@ def post_view(request, username, post_id):
     post = get_object_or_404(Post, author__username=username, id=post_id)
     comments = post.comments.all()
     form = CommentForm(request.POST or None)
-    context = {'author': post.author, 'post': post, 'form': form, 'comments':comments}
+    context = {'author': post.author, 'post': post, 'form': form, 'comments': comments}
     return render(request, 'posts/post.html', context)
 
 
@@ -76,8 +81,8 @@ def page_not_found(request, exception):
     # выводить её в шаблон пользователской страницы 404 мы не станем
     return render(
         request, 
-        "misc/404.html", 
-        {"path": request.path}, 
+        "misc/404.html",
+        {"path": request.path},
         status=404
     )
 
@@ -88,31 +93,33 @@ def server_error(request):
 
 @login_required
 def add_comment(request, username, post_id):
-    post = get_object_or_404(Post, id=post_id, author__username=username) 
+    post = get_object_or_404(Post, id=post_id, author__username=username)
     form = CommentForm(request.POST or None)
     if form.is_valid():
-        comment = Comment.objects.create(post = post, author = request.user, text = request.POST['text'])
+        comment = Comment.objects.create(post=post, author=request.user, text=request.POST['text'])
         comment.save()
     return redirect('post', username, post.id)
-    
+
+
 @login_required
 def follow_index(request):
     follow_list = Post.objects.filter(author__following__user=request.user).order_by('pub_date')
     paginator = Paginator(follow_list, 10)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
-    return render(request, "follow.html", {'page':page, 'paginator': paginator })
+    return render(request, "follow.html", {'page': page, 'paginator': paginator})
+
 
 @login_required
 def profile_follow(request, username):
-    author = get_object_or_404(User, username=username) 
+    author = get_object_or_404(User, username=username)
     if request.user != author:
         Follow.objects.get_or_create(user=request.user, author=author)
-    return redirect('profile', username = author.username)    
+    return redirect('profile', username=author.username)
 
 
 @login_required
 def profile_unfollow(request, username):
-    author = get_object_or_404(User, username=username) 
+    author = get_object_or_404(User, username=username)
     Follow.objects.get(user=request.user, author=author).delete()
-    return redirect('profile', username = author.username)  
+    return redirect('profile', username=author.username)  

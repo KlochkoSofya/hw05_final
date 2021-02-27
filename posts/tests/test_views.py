@@ -53,7 +53,6 @@ class PostViewsTests(TestCase):
         shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
         super().tearDownClass()
 
-
     def setUp(self):
         # Создаем авторизованный клиент
         self.guest_client = Client()
@@ -94,7 +93,7 @@ class PostViewsTests(TestCase):
             text='Текст',
             author=self.test_author,
             group=self.group_1,
-            image= self.uploaded
+            image=self.uploaded
         )
         response = self.guest_client.get(reverse('index'))
         post_info_0 = response.context.get('page')[0]
@@ -113,7 +112,7 @@ class PostViewsTests(TestCase):
             text='Текст',
             author=self.test_author,
             group=self.group_1,
-            image= self.uploaded
+            image=self.uploaded
         )
         response = self.authorized_client.get(reverse('group_posts', args={'test-slug-1'}))
         test_group_info = response.context.get('group')
@@ -123,7 +122,6 @@ class PostViewsTests(TestCase):
         self.assertEqual(test_group_title_0, 'Группа-1')
         self.assertEqual(test_group_slug_0, 'test-slug-1')
         self.assertEqual(test_group_image_0, self.post.image)
-
 
     def test_new_page_show_correct_context(self):
         cache.clear()
@@ -196,7 +194,7 @@ class PostViewsTests(TestCase):
             text='Текст',
             author=self.test_author,
             group=self.group_1,
-            image= self.uploaded
+            image=self.uploaded
         )
         response = self.guest_client.get(reverse('profile', args={'username'}))
         post_info_0 = response.context.get('page')[0]
@@ -215,7 +213,7 @@ class PostViewsTests(TestCase):
             text='Текст',
             author=self.test_author,
             group=self.group_1,
-            image= self.uploaded
+            image=self.uploaded
         )
         response = self.guest_client.get('/username/1/')
         post_info = response.context.get('post')
@@ -235,7 +233,7 @@ class PostViewsTests(TestCase):
             author=self.test_author,
             group=self.group_1
         )
-        posts_count = Post.objects.count()    
+        posts_count = Post.objects.count()
         form_data = {
             'text': 'Текст',
             'group': self.group_1.id,
@@ -263,22 +261,23 @@ class PostViewsTests(TestCase):
     def test_authorized_user_can_follow_and_unfollow(self):
         Follow.objects.all().delete()
         Follow.objects.create(
-            user= self.test_author,
-            author= self.test_author_2
-        ) 
-
+            user=self.test_author,
+            author=self.test_author_2
+        )
         follow = Follow.objects.count() 
         form_data = {
             'user': self.test_author,
             'author': self.test_author_3
         }
         # Отправляем POST-запрос
-        response = self.authorized_client.post(reverse('profile_follow', args={'username'}), data=form_data, follow=True)
+        response = self.authorized_client.post(reverse('profile_follow', args={'username'}),\
+             data=form_data, follow=True)
         # Проверяем, увеличилось ли число подписок
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Follow.objects.count(), follow + 1)
 
-        response = self.authorized_client.post(reverse('profile_unfollow', args={'username'}), data=form_data, follow=True)
+        response = self.authorized_client.post(reverse('profile_unfollow', args={'username'}),\
+             data=form_data, follow=True)
         # Проверяем, уменьшилось ли число подписок
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Follow.objects.count(), follow)
@@ -297,10 +296,11 @@ class PostViewsTests(TestCase):
         )
         form_data = {
             'user': self.test_author_2,
-            'author': self.test_author 
+            'author': self.test_author
         }
         # Отправляем POST-запрос
-        response = self.authorized_client_2.post(reverse('profile_follow', args={'username'}), data=form_data, follow=True)
+        response = self.authorized_client_2.post(reverse('profile_follow', args={'username'}),\
+             data=form_data, follow=True)
         follow_page = response.context.get('page')
         # появляется пост автора, на которого подписаны, и не появляется, на которого не подписаны
         self.assertIn(self.post_1, follow_page)
@@ -308,7 +308,6 @@ class PostViewsTests(TestCase):
 
     def test_comments_only_for_authorized(self):
         cache.clear()
-        
         self.post = Post.objects.create(
             text='Текст_тест',
             author=self.test_author,
@@ -326,8 +325,10 @@ class PostViewsTests(TestCase):
             'text': 'Комментарий_2'
         }
         # Отправляем POST-запрос
-        response = self.authorized_client_2.post(reverse('add_comment', args=['username', 1]), data=form_data_1, follow=True)
+        response = self.authorized_client_2.post(reverse('add_comment', args=['username', 1]),\
+             data=form_data_1, follow=True)
         self.assertEqual(Comment.objects.count(), comments+1)
-        response_2 = self.guest_client.post(reverse('add_comment', args=['username', 1]), data=form_data_2, follow=True)
+        response = self.guest_client.post(reverse('add_comment', args=['username', 1]),\
+             data=form_data_2, follow=True)
         # комментариев не прибавилось
         self.assertEqual(Comment.objects.count(), comments+1)
