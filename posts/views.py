@@ -41,18 +41,18 @@ def profile(request, username):
     paginator = Paginator(author_posts, 10)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
-    if request.user.is_authenticated and request.user != author and \
+    if (request.user.is_authenticated and request.user != author and 
         Follow.objects.filter(user=request.user, author=author).exists()):
-        following = True
+        following=True
     else:
-        following = False
+        following=False
     context = {
-        'page': page, 
-        'author': author, 
-        'author_posts': author_posts, 
-        'paginator': paginator, 
+        'page': page,
+        'author': author,
+        'author_posts': author_posts,
+        'paginator': paginator,
         'following': following
-    }
+        }
     return render(request, 'posts/profile.html', context)
 
 
@@ -80,7 +80,7 @@ def page_not_found(request, exception):
     # Переменная exception содержит отладочную информацию, 
     # выводить её в шаблон пользователской страницы 404 мы не станем
     return render(
-        request, 
+        request,
         "misc/404.html",
         {"path": request.path},
         status=404

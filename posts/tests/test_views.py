@@ -240,7 +240,8 @@ class PostViewsTests(TestCase):
             'image': self.uploaded_2
         }
         # Отправляем POST-запрос
-        response = self.authorized_client.post(reverse('new_post'), data=form_data, follow=True)
+        response = self.authorized_client.post(reverse('new_post'), data=form_data,\
+             follow=True)
         # Проверяем, увеличилось ли число постов
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Post.objects.count(), posts_count + 1)
@@ -326,9 +327,9 @@ class PostViewsTests(TestCase):
         }
         # Отправляем POST-запрос
         response = self.authorized_client_2.post(reverse('add_comment', args=['username', 1]),\
-             data=form_data_1, follow=True)
-        self.assertEqual(Comment.objects.count(), comments+1)
+            data=form_data_1, follow=True)
+        self.assertEqual(Comment.objects.count(), comments + 1)
         response = self.guest_client.post(reverse('add_comment', args=['username', 1]),\
              data=form_data_2, follow=True)
         # комментариев не прибавилось
-        self.assertEqual(Comment.objects.count(), comments+1)
+        self.assertEqual(Comment.objects.count(), comments + 1)
