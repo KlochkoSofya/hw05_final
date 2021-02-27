@@ -41,8 +41,8 @@ def profile(request, username):
     paginator = Paginator(author_posts, 10)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
-    if (request.user.is_authenticated and request.user != author and
-        Follow.objects.filter(user=request.user, author=author).exists()):
+    if (request.user.is_authenticated and request.user != author and (
+            Follow.objects.filter(user=request.user, author=author).exists())):
         following = True
     else:
         following = False
