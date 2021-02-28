@@ -291,7 +291,7 @@ class PostViewsTests(TestCase):
             reverse('profile_unfollow', args={'username_2'}), data=form_data, follow=True)
         # Проверяем, что число подписок осталось прежним
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(Follow.objects.count(), follow-1)
+        self.assertEqual(Follow.objects.count(), follow - 1)
 
     def test_new_post_appeared_for_followers(self):
         cache.clear()

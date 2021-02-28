@@ -67,18 +67,15 @@ class PostCreateFormTests(TestCase):
         # Отправляем POST-запрос
         response = self.authorized_client.post(reverse('new_post'), data=form_data, follow=True)
         # Проверяем, увеличилось ли число постов
-        image = Post.objects.all().first().image
         self.assertEqual(Post.objects.count(), posts_count + 1)
         self.assertEqual(response.status_code, 200)
         response_2 = self.authorized_client.post(reverse('new_post'), data=form_data_2, follow=True)
-        # Проверяем, что число постов не увеличилось      
+        # Проверяем, что число постов не увеличилось   
         self.assertEqual(Post.objects.count(), posts_count + 1)
         self.assertFormError(response_2, 'form', 'image', 'Загрузите правильное изображение. Файл,'
             ' который вы загрузили, поврежден или не является изображением.')
 
-
     def test_edit_post(self):
-
         form_data = {'text': 'Текст'}
         self.authorized_client.post(
             reverse('post_edit', args=[self.user.username, self.post.id]), data=form_data, follow=True)
