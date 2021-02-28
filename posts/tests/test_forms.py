@@ -3,6 +3,9 @@ from django.urls import reverse
 from posts.models import Post, Group
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.cache import cache
+
 
 User = get_user_model()
 
@@ -31,17 +34,48 @@ class PostCreateFormTests(TestCase):
     def test_create_post(self):
         # Подсчитаем количество записей в post
         cache.clear()
-        posts_count = Post.objects.count()
+        small_gif = (
+            b'\x47\x49\x46\x38\x39\x61\x02\x00'
+            b'\x01\x00\x80\x00\x00\x00\x00\x00'
+            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
+            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
+            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
+            b'\x0A\x00\x3B'
+        )
+        uploaded = SimpleUploadedFile(
+            name='small.gif',
+            content=small_gif,
+            content_type='image/gif'
+        )
         form_data = {
-            'author': self.authorized_client,
+            'image': uploaded,
             'text': 'Текст',
             'group': Group.objects.get(slug='test-slug').id
         }
+        small_text = (b'\x47\x49\x46\x38\x39\x61\x02\x00')
+        uploaded_2 = SimpleUploadedFile(
+            name='small.txt',
+            content=small_text,
+            content_type='pain/txt'
+        )
+        form_data_2 = {
+            'image': uploaded_2,
+            'text': 'Текст',
+            'group': Group.objects.get(slug='test-slug').id
+        }
+        posts_count = Post.objects.count()
         # Отправляем POST-запрос
         response = self.authorized_client.post(reverse('new_post'), data=form_data, follow=True)
         # Проверяем, увеличилось ли число постов
+        image = Post.objects.all().first().image
         self.assertEqual(Post.objects.count(), posts_count + 1)
         self.assertEqual(response.status_code, 200)
+        response_2 = self.authorized_client.post(reverse('new_post'), data=form_data_2, follow=True)
+        # Проверяем, что число постов не увеличилось      
+        self.assertEqual(Post.objects.count(), posts_count + 1)
+        self.assertFormError(response_2, 'form', 'image', 'Загрузите правильное изображение. Файл,'
+            ' который вы загрузили, поврежден или не является изображением.')
+
 
     def test_edit_post(self):
 

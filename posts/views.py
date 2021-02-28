@@ -46,6 +46,8 @@ def profile(request, username):
         following = True
     else:
         following = False
+    # follower = Follow.objects.filter(user=username).count()
+    # following_authors = Follow.objects.filter(author=username).count()
     context = {
         'page': page,
         'author': author,
@@ -120,6 +122,6 @@ def profile_follow(request, username):
 
 @login_required
 def profile_unfollow(request, username):
-    author = get_object_or_404(User, username=username)
-    Follow.objects.get(user=request.user, author=author).delete()
-    return redirect('profile', username=author.username)
+    #author = get_object_or_404(User, username=username)
+    Follow.objects.filter(author__username=username).filter(user=request.user).delete()
+    return redirect('profile', username=username)

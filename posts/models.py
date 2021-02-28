@@ -22,7 +22,7 @@ class Post(models.Model):
     group = models.ForeignKey(
         Group, on_delete=models.SET_NULL, blank=True, null=True,
         related_name="posts", verbose_name="Группа", help_text="Введите название группы")
-    image = models.ImageField(upload_to='posts/', blank=True, null=True)
+    image = models.ImageField(upload_to='posts/', blank=True, null=True, verbose_name="Изображение")
 
     def __str__(self):
         return self.text[:15]

@@ -28,3 +28,6 @@ coverage.xml
 *.cover
 
 media/
+
+.vscode/
+settings.json

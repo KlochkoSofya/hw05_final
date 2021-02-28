@@ -56,7 +56,7 @@ class PostViewsTests(TestCase):
     def setUp(self):
         # Создаем авторизованный клиент
         self.guest_client = Client()
-        self.user = User.objects.create_user(username='StanislavaBasova')
+        self.user = User.objects.create_user(username='Sonya')
         self.authorized_client = Client()
         self.authorized_client_2 = Client()
         self.authorized_client_3 = Client()
@@ -258,15 +258,15 @@ class PostViewsTests(TestCase):
         response = self.authorized_client.get('index')
         self.assertEqual(cached_response_content, response.content)
 
-    def test_authorized_user_can_follow_and_unfollow(self):
+    def test_authorized_user_can_follow(self):
         Follow.objects.all().delete()
         Follow.objects.create(
-            user=self.test_author,
+            user=self.user,
             author=self.test_author_2
         )
         follow = Follow.objects.count()
         form_data = {
-            'user': self.test_author,
+            'user': self.user,
             'author': self.test_author_3
         }
         # Отправляем POST-запрос
@@ -276,22 +276,28 @@ class PostViewsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Follow.objects.count(), follow + 1)
 
+    def test_authorized_user_can_unfollow(self):
+        Follow.objects.create(
+            user=self.user,
+            author=self.test_author_2
+        )
+        follow = Follow.objects.count()
+        form_data = {
+            'user': self.user,
+            'author': self.test_author_2
+        }
+        # Отправляем POST-запрос
         response = self.authorized_client.post(
-            reverse('profile_unfollow', args={'username'}), data=form_data, follow=True)
-        # Проверяем, уменьшилось ли число подписок
+            reverse('profile_unfollow', args={'username_2'}), data=form_data, follow=True)
+        # Проверяем, что число подписок осталось прежним
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(Follow.objects.count(), follow)
+        self.assertEqual(Follow.objects.count(), follow-1)
 
-    def test_new_post_appeared_for_followers_and_not_for_nonfollowers(self):
+    def test_new_post_appeared_for_followers(self):
         cache.clear()
         self.post_1 = Post.objects.create(
             text='Текст_тест',
             author=self.test_author,
-            group=self.group_1
-        )
-        self.post_2 = Post.objects.create(
-            text='Текст_тест_2',
-            author=self.test_author_3,
             group=self.group_1
         )
         form_data = {
@@ -302,11 +308,26 @@ class PostViewsTests(TestCase):
         response = self.authorized_client_2.post(
             reverse('profile_follow', args={'username'}), data=form_data, follow=True)
         follow_page = response.context.get('page')
-        # появляется пост автора, на которого подписаны, и не появляется, на которого не подписаны
+        # появляется пост автора, на которого подписаны
         self.assertIn(self.post_1, follow_page)
+
+    def test_new_post_not_appeared_for_not_followers(self):
+        cache.clear()
+        self.post_2 = Post.objects.create(
+            text='Текст_тест_2',
+            author=self.test_author_3,
+            group=self.group_1
+        )
+        form_data = {
+            'user': self.test_author_2,
+            'author': self.test_author
+        }
+        response = self.authorized_client_2.post(
+            reverse('follow_index'), data=form_data, follow=True)
+        follow_page = response.context.get('page')
         self.assertNotIn(self.post_2, follow_page)
 
-    def test_comments_only_for_authorized(self):
+    def test_comments_for_authorized(self):
         cache.clear()
         self.post = Post.objects.create(
             text='Текст_тест',
@@ -319,16 +340,26 @@ class PostViewsTests(TestCase):
             'author': self.test_author_2,
             'text': 'Комментарий_1'
         }
+        # Отправляем POST-запрос
+        self.authorized_client_2.post(
+            reverse('add_comment', args=['username', 1]), data=form_data_1, follow=True)
+        self.assertEqual(Comment.objects.count(), comments + 1)
+
+    def test_comments_not_for_nonauthorized(self):
+        cache.clear()
+        self.post = Post.objects.create(
+            text='Текст_тест',
+            author=self.test_author,
+            group=self.group_1
+        )
+        comments = Comment.objects.count()
         form_data_2 = {
             'post': self.post,
             'author': self.guest_client,
             'text': 'Комментарий_2'
         }
         # Отправляем POST-запрос
-        self.authorized_client_2.post(
-            reverse('add_comment', args=['username', 1]), data=form_data_1, follow=True)
-        self.assertEqual(Comment.objects.count(), comments + 1)
         self.guest_client.post(
             reverse('add_comment', args=['username', 1]), data=form_data_2, follow=True)
         # комментариев не прибавилось
-        self.assertEqual(Comment.objects.count(), comments + 1)
+        self.assertEqual(Comment.objects.count(), comments)
