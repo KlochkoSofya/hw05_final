@@ -73,8 +73,7 @@ class PostCreateFormTests(TestCase):
         # Проверяем, что число постов не увеличилось
         self.assertEqual(Post.objects.count(), posts_count + 1)
         self.assertFormError(response_2, 'form', 'image', (
-                            'Загрузите правильное изображение. Файл,'
-                            ' который вы загрузили, поврежден или не является изображением.'))
+            'Загрузите правильное изображение. Файл, который вы загрузили, поврежден или не является изображением.'))
 
     def test_edit_post(self):
         form_data = {'text': 'Текст'}
