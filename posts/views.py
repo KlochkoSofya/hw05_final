@@ -46,8 +46,6 @@ def profile(request, username):
         following = True
     else:
         following = False
-    # follower = Follow.objects.filter(user=username).count()
-    # following_authors = Follow.objects.filter(author=username).count()
     context = {
         'page': page,
         'author': author,
@@ -98,8 +96,10 @@ def add_comment(request, username, post_id):
     post = get_object_or_404(Post, id=post_id, author__username=username)
     form = CommentForm(request.POST or None)
     if form.is_valid():
-        comment = Comment.objects.create(post=post, author=request.user, text=request.POST['text'])
-        comment.save()
+        comment = form.save(commit=False)
+        comment.author = request.user
+        comment.post = post
+        form.save()
     return redirect('post', username, post.id)
 
 

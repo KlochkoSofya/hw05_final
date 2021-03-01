@@ -31,8 +31,7 @@ class PostCreateFormTests(TestCase):
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
 
-    def test_create_post(self):
-        # Подсчитаем количество записей в post
+    def test_create_post_only_with_correct_image(self):
         cache.clear()
         small_gif = (
             b'\x47\x49\x46\x38\x39\x61\x02\x00'
@@ -52,6 +51,15 @@ class PostCreateFormTests(TestCase):
             'text': 'Текст',
             'group': Group.objects.get(slug='test-slug').id
         }
+        posts_count = Post.objects.count()
+        # Отправляем POST-запрос
+        response = self.authorized_client.post(reverse('new_post'), data=form_data, follow=True)
+        # Проверяем, увеличилось ли число постов
+        self.assertEqual(Post.objects.count(), posts_count + 1)
+        self.assertEqual(response.status_code, 200)
+
+    def test_create_post_only_with_correct_image(self):
+        cache.clear()
         small_text = (b'\x47\x49\x46\x38\x39\x61\x02\x00')
         uploaded_2 = SimpleUploadedFile(
             name='small.txt',
@@ -65,16 +73,12 @@ class PostCreateFormTests(TestCase):
         }
         posts_count = Post.objects.count()
         # Отправляем POST-запрос
-        response = self.authorized_client.post(reverse('new_post'), data=form_data, follow=True)
-        # Проверяем, увеличилось ли число постов
-        self.assertEqual(Post.objects.count(), posts_count + 1)
-        self.assertEqual(response.status_code, 200)
         response_2 = self.authorized_client.post(reverse('new_post'), data=form_data_2, follow=True)
         # Проверяем, что число постов не увеличилось
-        self.assertEqual(Post.objects.count(), posts_count + 1)
+        self.assertEqual(Post.objects.count(), posts_count)
         self.assertFormError(response_2, 'form', 'image', (
             'Загрузите правильное изображение. Файл, который вы загрузили, поврежден или не является изображением.'))
-
+    
     def test_edit_post(self):
         form_data = {'text': 'Текст'}
         self.authorized_client.post(
