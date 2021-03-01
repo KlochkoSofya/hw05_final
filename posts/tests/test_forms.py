@@ -78,7 +78,7 @@ class PostCreateFormTests(TestCase):
         self.assertEqual(Post.objects.count(), posts_count)
         self.assertFormError(response_2, 'form', 'image', (
             'Загрузите правильное изображение. Файл, который вы загрузили, поврежден или не является изображением.'))
-    
+
     def test_edit_post(self):
         form_data = {'text': 'Текст'}
         self.authorized_client.post(
